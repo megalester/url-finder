@@ -1,26 +1,28 @@
 const dns = require('dns/promises');
 
-const MX_LOGIN_PROVIDERS = {
+const providerLoginMap = {
   'secureserver.net': 'https://sso.godaddy.com/?realm=pass&app=ox',
   'outlook.com': 'https://outlook.office365.com',
   'protection.outlook.com': 'https://outlook.office365.com',
   'zoho.com': 'https://mail.zoho.com',
   'google.com': 'https://mail.google.com',
-  // Add more here as needed
+  'yahoodns.net': 'https://mail.yahoo.com'
 };
 
-async function detectLoginURL(domain) {
+async function findEmailLogin(email) {
+  const domain = email.split('@')[1];
+
   try {
     const mxRecords = await dns.resolveMx(domain);
-    const mxHostnames = mxRecords.map(mx => mx.exchange.toLowerCase());
+    const mxHosts = mxRecords.map(mx => mx.exchange.toLowerCase());
 
-    for (const host of mxHostnames) {
-      for (const key in MX_LOGIN_PROVIDERS) {
-        if (host.includes(key)) {
+    for (const mxHost of mxHosts) {
+      for (const key in providerLoginMap) {
+        if (mxHost.includes(key)) {
           return {
             domain,
             provider: key,
-            loginURL: MX_LOGIN_PROVIDERS[key]
+            loginURL: providerLoginMap[key]
           };
         }
       }
@@ -30,14 +32,16 @@ async function detectLoginURL(domain) {
       domain,
       provider: 'unknown',
       loginURL: null,
-      note: 'No known provider match in MX records.'
+      note: 'MX records found, but no known provider matched.'
     };
   } catch (err) {
     return {
-      error: `Failed to resolve MX for ${domain}: ${err.message}`
+      domain,
+      error: 'MX lookup failed',
+      message: err.message
     };
   }
 }
 
-// Example usage
-detectLoginURL('earthbluerelocation.com').then(console.log);
+// Run it
+findEmailLogin('info@earthbluerelocation.com').then(console.log);
