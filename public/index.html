@@ -7,7 +7,7 @@
 </head>
 <body>
     <h1>Email Domain Login Finder</h1>
-    <p>Enter the domain of the email (e.g., 'animalstuffstore.com') to find the login page:</p>
+    <p>Enter your email domain (e.g., 'earthbluerelocation.com') to find the login page:</p>
     <input type="text" id="emailInput" placeholder="e.g. bona.com">
     <button onclick="findLoginPage()">Find Login</button>
 
@@ -23,25 +23,27 @@
                 return;
             }
 
-            // Extract domain from email or input
+            // Extract domain from input (or email if it includes @)
             const domain = emailInput.split('@')[1] || emailInput;
 
             const loginPages = [];
 
             // List of known email services with login URLs
             const knownServices = {
-                'zoho.com': 'https://mail.zoho.com',
-                'office365.com': 'https://login.microsoftonline.com',
+                'godaddy.com': 'https://sso.godaddy.com/?realm=pass&app=ox',
+                'office365.com': 'https://outlook.office365.com',
                 'outlook.com': 'https://outlook.live.com',
+                'zoho.com': 'https://mail.zoho.com',
                 'gmail.com': 'https://mail.google.com',
                 'yahoo.com': 'https://login.yahoo.com',
                 'aol.com': 'https://login.aol.com',
                 'protonmail.com': 'https://mail.protonmail.com',
                 'icloud.com': 'https://www.icloud.com/mail',
-                'fastmail.com': 'https://www.fastmail.com'
+                'fastmail.com': 'https://www.fastmail.com',
+                // Add any other recognized domains here
             };
 
-            // Check if domain is a known service and show the correct login page
+            // Check if the domain matches any known service
             if (knownServices[domain]) {
                 resultDiv.innerHTML = `
                     <p>Login page for <strong>${domain}</strong>:</p>
