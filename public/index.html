@@ -1,91 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Domain Login Finder</title>
-</head>
-<body>
-    <h1>Email Domain Login Finder</h1>
-    <p>Enter your email domain (e.g., 'earthbluerelocation.com') to find the login page:</p>
-    <input type="text" id="emailInput" placeholder="e.g. bona.com">
-    <button onclick="findLoginPage()">Find Login</button>
+const dns = require('dns/promises');
 
-    <div id="result"></div>
+const MX_LOGIN_PROVIDERS = {
+  'secureserver.net': 'https://sso.godaddy.com/?realm=pass&app=ox',
+  'outlook.com': 'https://outlook.office365.com',
+  'protection.outlook.com': 'https://outlook.office365.com',
+  'zoho.com': 'https://mail.zoho.com',
+  'google.com': 'https://mail.google.com',
+  // Add more here as needed
+};
 
-    <script>
-        async function findLoginPage() {
-            const emailInput = document.getElementById('emailInput').value.trim().toLowerCase();
-            const resultDiv = document.getElementById('result');
+async function detectLoginURL(domain) {
+  try {
+    const mxRecords = await dns.resolveMx(domain);
+    const mxHostnames = mxRecords.map(mx => mx.exchange.toLowerCase());
 
-            if (emailInput === '') {
-                resultDiv.innerHTML = '{"error": "Please enter a valid email domain"}';
-                return;
-            }
-
-            // Extract domain from input (or email if it includes @)
-            const domain = emailInput.split('@')[1] || emailInput;
-
-            const loginPages = [];
-
-            // List of known email services with login URLs
-            const knownServices = {
-                'godaddy.com': 'https://sso.godaddy.com/?realm=pass&app=ox',
-                'office365.com': 'https://outlook.office365.com',
-                'outlook.com': 'https://outlook.live.com',
-                'zoho.com': 'https://mail.zoho.com',
-                'gmail.com': 'https://mail.google.com',
-                'yahoo.com': 'https://login.yahoo.com',
-                'aol.com': 'https://login.aol.com',
-                'protonmail.com': 'https://mail.protonmail.com',
-                'icloud.com': 'https://www.icloud.com/mail',
-                'fastmail.com': 'https://www.fastmail.com',
-                // Add any other recognized domains here
-            };
-
-            // Check if the domain matches any known service
-            if (knownServices[domain]) {
-                resultDiv.innerHTML = `
-                    <p>Login page for <strong>${domain}</strong>:</p>
-                    <a href="${knownServices[domain]}" target="_blank">${knownServices[domain]}</a>`;
-                return;
-            }
-
-            // If it's a custom domain, try common login URLs
-            const loginPageUrls = [
-                `https://mail.${domain}`,
-                `https://webmail.${domain}`,
-                `https://email.${domain}`,
-                `https://portal.${domain}`,
-                `https://login.${domain}`,
-                `https://web.${domain}`,
-                `https://${domain}`, // Check the domain itself
-            ];
-
-            // Loop over all possible login page URLs
-            let foundValid = false;
-            for (let url of loginPageUrls) {
-                try {
-                    const response = await fetch(url, { method: 'GET', mode: 'cors' });
-
-                    // Only consider the page if the status is 200 (OK)
-                    if (response.ok) {
-                        resultDiv.innerHTML = `
-                            <p>Login page for <strong>${domain}</strong>:</p>
-                            <a href="${url}" target="_blank">${url}</a>`;
-                        foundValid = true;
-                        break;
-                    }
-                } catch (error) {
-                    // Ignore error, continue trying other URLs
-                }
-            }
-
-            // If no valid login page found
-            if (!foundValid) {
-                resultDiv.innerHTML = `{"error": "No valid login page found for domain: ${domain}"}`;
-            }
+    for (const host of mxHostnames) {
+      for (const key in MX_LOGIN_PROVIDERS) {
+        if (host.includes(key)) {
+          return {
+            domain,
+            provider: key,
+            loginURL: MX_LOGIN_PROVIDERS[key]
+          };
         }
-    </script>
-</body>
-</html>
+      }
+    }
+
+    return {
+      domain,
+      provider: 'unknown',
+      loginURL: null,
+      note: 'No known provider match in MX records.'
+    };
+  } catch (err) {
+    return {
+      error: `Failed to resolve MX for ${domain}: ${err.message}`
+    };
+  }
+}
+
+// Example usage
+detectLoginURL('earthbluerelocation.com').then(console.log);
