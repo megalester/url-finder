@@ -1,53 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Webmail Finder</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f4f4f4;
-      padding: 50px;
-      text-align: center;
-    }
-    input[type="email"] {
-      padding: 10px;
-      width: 300px;
-      margin-bottom: 10px;
-    }
-    button {
-      padding: 10px 20px;
-      background: #007bff;
-      border: none;
-      color: white;
-      cursor: pointer;
-    }
-    pre {
-      background: #fff;
-      padding: 20px;
-      text-align: left;
-      display: inline-block;
-      margin-top: 20px;
-      max-width: 90%;
-      word-wrap: break-word;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Domain Login Finder</title>
 </head>
 <body>
-  <h1>Email Domain Login Finder</h1>
-  <p>Enter your email to find the login page:</p>
-  <input type="email" id="email" placeholder="e.g. john@moreyspiers.com" />
-  <button onclick="getLoginURL()">Find Login</button>
-  <pre id="result"></pre>
+    <h1>Email Domain Login Finder</h1>
+    <p>Enter the domain of the email (e.g., 'bona.com', 'moreyspiers.com') to find the login page:</p>
+    <input type="text" id="emailInput" placeholder="e.g. bona.com">
+    <button onclick="findLoginPage()">Find Login</button>
 
-  <script>
-    async function getLoginURL() {
-      const email = document.getElementById('email').value;
-      const res = await fetch('/lookup?email=' + encodeURIComponent(email));
-      const data = await res.json();
-      document.getElementById('result').textContent = JSON.stringify(data, null, 2);
-    }
-  </script>
+    <div id="result"></div>
+
+    <script>
+        async function findLoginPage() {
+            const emailInput = document.getElementById('emailInput').value.trim().toLowerCase();
+            const resultDiv = document.getElementById('result');
+
+            if (emailInput === '') {
+                resultDiv.innerHTML = '{"error": "Please enter a valid email domain"}';
+                return;
+            }
+
+            // If only the domain is entered, proceed
+            const domain = emailInput.split('@')[1] || emailInput;
+
+            // Assuming common login page URL patterns for most domains
+            const loginPageUrl = `https://${domain}/login`;
+
+            try {
+                const response = await fetch(loginPageUrl, { method: 'GET', mode: 'cors', headers: { 'Content-Type': 'text/html' } });
+
+                if (response.ok) {
+                    resultDiv.innerHTML = JSON.stringify({ "login_page": loginPageUrl }, null, 2);
+                } else {
+                    resultDiv.innerHTML = JSON.stringify({ "error": `No login page found for domain: ${domain}` }, null, 2);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = JSON.stringify({ "error": `Error fetching login page for domain: ${domain}` }, null, 2);
+            }
+        }
+    </script>
 </body>
 </html>
