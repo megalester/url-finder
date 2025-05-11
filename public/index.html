@@ -26,6 +26,9 @@
             // Extract domain from email or input
             const domain = emailInput.split('@')[1] || emailInput;
 
+            const loginPages = [];
+
+            // Try common login page URLs for this domain
             const loginPageUrls = [
                 `https://mail.${domain}`,
                 `https://webmail.${domain}`,
@@ -34,10 +37,8 @@
                 `https://login.${domain}`,
                 `https://web.${domain}`,
                 `https://${domain}`, // Check the domain itself
-                `https://${domain}.mail.protection.outlook.com`
+                `https://${domain}.mail.protection.outlook.com` // For Office 365
             ];
-
-            const loginPages = [];
 
             // Loop over all possible login page URLs
             for (let url of loginPageUrls) {
