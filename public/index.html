@@ -23,22 +23,52 @@
                 return;
             }
 
-            // If only the domain is entered, proceed
+            // Extract domain from email or input
             const domain = emailInput.split('@')[1] || emailInput;
 
-            // Assuming common login page URL patterns for most domains
-            const loginPageUrl = `https://${domain}/login`;
+            const loginPageUrls = [
+                `https://mail.${domain}`,
+                `https://webmail.${domain}`,
+                `https://email.${domain}`,
+                `https://portal.${domain}`,
+                `https://login.${domain}`,
+                `https://web.${domain}`,
+                `https://${domain}`, // Check the domain itself
+                `https://${domain}.mail.protection.outlook.com`
+            ];
 
-            try {
-                const response = await fetch(loginPageUrl, { method: 'GET', mode: 'cors', headers: { 'Content-Type': 'text/html' } });
+            const loginPages = [];
 
-                if (response.ok) {
-                    resultDiv.innerHTML = JSON.stringify({ "login_page": loginPageUrl }, null, 2);
-                } else {
-                    resultDiv.innerHTML = JSON.stringify({ "error": `No login page found for domain: ${domain}` }, null, 2);
+            // Loop over all possible login page URLs
+            for (let url of loginPageUrls) {
+                try {
+                    const response = await fetch(url, { method: 'GET', mode: 'cors' });
+
+                    // Only consider the page if the status is 200 (OK)
+                    if (response.ok) {
+                        loginPages.push({ url, status: response.status });
+                    } else {
+                        loginPages.push({ url, status: response.status });
+                    }
+                } catch (error) {
+                    loginPages.push({ url, status: 'unreachable' });
                 }
-            } catch (error) {
-                resultDiv.innerHTML = JSON.stringify({ "error": `Error fetching login page for domain: ${domain}` }, null, 2);
+            }
+
+            // Show results
+            if (loginPages.length > 0) {
+                // Find the first valid login page (status 200)
+                const validLoginPage = loginPages.find(page => page.status === 200);
+
+                if (validLoginPage) {
+                    resultDiv.innerHTML = `
+                        <p>Login page found for <strong>${domain}</strong>:</p>
+                        <a href="${validLoginPage.url}" target="_blank">${validLoginPage.url}</a>`;
+                } else {
+                    resultDiv.innerHTML = `{"error": "No valid login page found for domain: ${domain}"}`;
+                }
+            } else {
+                resultDiv.innerHTML = '{"error": "No login page found for domain: ' + domain + '"}';
             }
         }
     </script>
