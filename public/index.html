@@ -28,7 +28,26 @@
 
             const loginPages = [];
 
-            // Try common login page URLs for this domain
+            // List of known email services with login URLs
+            const knownServices = {
+                'zoho.com': 'https://mail.zoho.com',
+                'office365.com': 'https://login.microsoftonline.com',
+                'outlook.com': 'https://outlook.live.com',
+                'gmail.com': 'https://mail.google.com',
+                'yahoo.com': 'https://login.yahoo.com',
+                'aol.com': 'https://login.aol.com',
+                'protonmail.com': 'https://mail.protonmail.com',
+            };
+
+            // Check if domain is a known service and show the correct login page
+            if (knownServices[domain]) {
+                resultDiv.innerHTML = `
+                    <p>Login page for <strong>${domain}</strong>:</p>
+                    <a href="${knownServices[domain]}" target="_blank">${knownServices[domain]}</a>`;
+                return;
+            }
+
+            // If it's a custom domain, try common login URLs
             const loginPageUrls = [
                 `https://mail.${domain}`,
                 `https://webmail.${domain}`,
@@ -37,7 +56,6 @@
                 `https://login.${domain}`,
                 `https://web.${domain}`,
                 `https://${domain}`, // Check the domain itself
-                `https://${domain}.mail.protection.outlook.com` // For Office 365
             ];
 
             // Loop over all possible login page URLs
