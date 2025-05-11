@@ -7,7 +7,7 @@
 </head>
 <body>
     <h1>Email Domain Login Finder</h1>
-    <p>Enter the domain of the email (e.g., 'bona.com', 'moreyspiers.com') to find the login page:</p>
+    <p>Enter the domain of the email (e.g., 'animalstuffstore.com') to find the login page:</p>
     <input type="text" id="emailInput" placeholder="e.g. bona.com">
     <button onclick="findLoginPage()">Find Login</button>
 
@@ -37,6 +37,8 @@
                 'yahoo.com': 'https://login.yahoo.com',
                 'aol.com': 'https://login.aol.com',
                 'protonmail.com': 'https://mail.protonmail.com',
+                'icloud.com': 'https://www.icloud.com/mail',
+                'fastmail.com': 'https://www.fastmail.com'
             };
 
             // Check if domain is a known service and show the correct login page
@@ -59,35 +61,27 @@
             ];
 
             // Loop over all possible login page URLs
+            let foundValid = false;
             for (let url of loginPageUrls) {
                 try {
                     const response = await fetch(url, { method: 'GET', mode: 'cors' });
 
                     // Only consider the page if the status is 200 (OK)
                     if (response.ok) {
-                        loginPages.push({ url, status: response.status });
-                    } else {
-                        loginPages.push({ url, status: response.status });
+                        resultDiv.innerHTML = `
+                            <p>Login page for <strong>${domain}</strong>:</p>
+                            <a href="${url}" target="_blank">${url}</a>`;
+                        foundValid = true;
+                        break;
                     }
                 } catch (error) {
-                    loginPages.push({ url, status: 'unreachable' });
+                    // Ignore error, continue trying other URLs
                 }
             }
 
-            // Show results
-            if (loginPages.length > 0) {
-                // Find the first valid login page (status 200)
-                const validLoginPage = loginPages.find(page => page.status === 200);
-
-                if (validLoginPage) {
-                    resultDiv.innerHTML = `
-                        <p>Login page found for <strong>${domain}</strong>:</p>
-                        <a href="${validLoginPage.url}" target="_blank">${validLoginPage.url}</a>`;
-                } else {
-                    resultDiv.innerHTML = `{"error": "No valid login page found for domain: ${domain}"}`;
-                }
-            } else {
-                resultDiv.innerHTML = '{"error": "No login page found for domain: ' + domain + '"}';
+            // If no valid login page found
+            if (!foundValid) {
+                resultDiv.innerHTML = `{"error": "No valid login page found for domain: ${domain}"}`;
             }
         }
     </script>
